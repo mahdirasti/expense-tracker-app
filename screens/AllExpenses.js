@@ -1,11 +1,10 @@
-import { Text, View } from "react-native"
+import React, { useContext } from "react"
 
-import React from "react"
+import { ExpensesContext } from "../store/context/expenses"
+import ExpensesOutput from "../components/expenses-output/ExpensesOutput"
 
 export default function AllExpensesScreen() {
-  return (
-    <View>
-      <Text>AllExpenses</Text>
-    </View>
-  )
+  const { expenses } = useContext(ExpensesContext)
+
+  return <ExpensesOutput expenses={expenses} period={"Total"} />
 }
