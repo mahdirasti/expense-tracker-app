@@ -5,6 +5,7 @@ import Button from "../components/ui/Button"
 import { ExpensesContext } from "../store/context/expenses"
 import { GlobalStyles } from "../constants/styles"
 import ManageEpenseForm from "../components/manage-expense/ManageEpenseForm"
+import { getFormattedDate } from "../utils/formattedDate"
 
 export default function ManageExpenseScreen({ route, navigation }) {
   const { addExpense, updateExpense, removeExpense, expenses } =
@@ -27,25 +28,26 @@ export default function ManageExpenseScreen({ route, navigation }) {
   }
   const confirmExpenseHandler = (values) => {
     if (hasExpenseId) {
-      updateExpense(expenseId, {
-        ...values,
-        date: new Date(values.date),
-        amount: +values.amount
-      })
+      updateExpense(expenseId, values)
     } else {
       addExpense({
         id: Math.floor(Math.random() * 100000) + new Date().toString(),
-        ...values,
-        date: new Date(values.date),
-        amount: +values.amount
+        ...values
       })
     }
     navigation.goBack()
   }
 
+  const expenseFormDefaultValues = {
+    title: { value: expense?.title || "" } || "",
+    amount: { value: expense?.amount || "" } || "",
+    date: { value: expense?.date && getFormattedDate(expense?.date) } || ""
+  }
+
   return (
     <View style={styles.container}>
       <ManageEpenseForm
+        defaultValues={expenseFormDefaultValues}
         onCancel={cancelExpenseHandler}
         onSubmit={confirmExpenseHandler}
         submitButtonLabel={hasExpenseId ? "Confirm" : "Add"}

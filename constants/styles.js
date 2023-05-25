@@ -13,6 +13,8 @@ export const GlobalStyles = {
     gray500: "#39324a",
     gray700: "#221c30",
     grey100: "rgba(0,0,0,0.12)",
-    grey10: "rgba(0,0,0,0.04)"
+    grey10: "rgba(0,0,0,0.04)",
+    error50: "#FFEBEE",
+    error500: "#F44336"
   }
 }

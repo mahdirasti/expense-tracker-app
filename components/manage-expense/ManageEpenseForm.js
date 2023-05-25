@@ -1,23 +1,50 @@
-import { StyleSheet, View } from "react-native"
+import { Alert, StyleSheet, View } from "react-native"
 
 import Button from "../ui/Button"
-import { GlobalStyles } from "../../constants/styles"
 import Input from "../ui/Input"
 import React from "react"
 
 export default function ManageEpenseForm({
   onCancel,
   onSubmit,
-  submitButtonLabel
+  submitButtonLabel,
+  defaultValues
 }) {
-  const [inputValues, setInputValues] = React.useState({})
+  const [inputs, setInputs] = React.useState({
+    amount: { value: defaultValues.amount.value, isValid: true },
+    date: { value: defaultValues.date.value, isValid: true },
+    title: { value: defaultValues.title.value, isValid: true }
+  })
 
   function inputHandler(key, enteredValue) {
-    setInputValues((crt) => ({ ...crt, [key]: enteredValue }))
+    setInputs((crt) => ({
+      ...crt,
+      [key]: { value: enteredValue, isValid: true }
+    }))
   }
 
   function handleSubmit() {
-    if (onSubmit) onSubmit(inputValues)
+    const expenseData = {
+      amount: +inputs?.amount?.value,
+      date: new Date(inputs.date.value),
+      title: inputs.title.value
+    }
+
+    const amountIsValid = !isNaN(expenseData.amount) && expenseData.amount > 0
+    const dateIsValid = expenseData.date.toString() !== "Invalid Date"
+    const titleIsValid = expenseData.title.trim().length !== 0
+
+    if (!amountIsValid || !dateIsValid || !titleIsValid) {
+      setInputs((crt) => ({
+        title: { value: crt.title.value, isValid: titleIsValid },
+        amount: { value: crt.amount.value, isValid: amountIsValid },
+        date: { value: crt.date.value, isValid: dateIsValid }
+      }))
+
+      return
+    }
+
+    if (onSubmit) onSubmit(expenseData)
   }
 
   return (
@@ -27,8 +54,9 @@ export default function ManageEpenseForm({
         inputConfig={{
           onChangeText: inputHandler.bind(this, "amount"),
           keyboardType: "decimal-pad",
-          value: inputValues?.amount
+          value: "" + inputs?.amount?.value
         }}
+        error={!inputs.amount.isValid && "Amount is invalid!"}
       />
       <Input
         label={"Date"}
@@ -37,16 +65,18 @@ export default function ManageEpenseForm({
           keyboardType: "default",
           placeholder: "YYYY-MM-DD",
           maxLength: 10,
-          value: inputValues?.date
+          value: inputs?.date?.value
         }}
+        error={!inputs.date.isValid && "Date is invalid!"}
       />
       <Input
         label={"Title"}
         inputConfig={{
           onChangeText: inputHandler.bind(this, "title"),
           multiline: true,
-          value: inputValues?.title
+          value: inputs?.title?.value
         }}
+        error={!inputs.title.isValid && "Title is invalid!"}
       />
       <View style={styles.buttonsContainer}>
         <Button onPress={handleSubmit}>{submitButtonLabel}</Button>
