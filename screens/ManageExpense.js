@@ -1,15 +1,23 @@
-import React, { useContext } from "react"
+import React, { useContext, useState } from "react"
 import { StyleSheet, View } from "react-native"
+import { deleteExpense, storeExpense, updateExpense } from "../utils/http"
 
 import Button from "../components/ui/Button"
 import { ExpensesContext } from "../store/context/expenses"
 import { GlobalStyles } from "../constants/styles"
+import LoadingOverlay from "../components/ui/LoadingOverlay"
 import ManageEpenseForm from "../components/manage-expense/ManageEpenseForm"
 import { getFormattedDate } from "../utils/formattedDate"
 
 export default function ManageExpenseScreen({ route, navigation }) {
-  const { addExpense, updateExpense, removeExpense, expenses } =
-    useContext(ExpensesContext)
+  const [isFetching, setIsFetching] = useState()
+
+  const {
+    addExpense,
+    updateExpense: contextUpdateExpense,
+    removeExpense,
+    expenses
+  } = useContext(ExpensesContext)
 
   const hasExpenseId = !!route?.params?.id
   const expenseId = route?.params?.id
@@ -17,24 +25,37 @@ export default function ManageExpenseScreen({ route, navigation }) {
   const expense =
     (expenseId && expenses.filter((item) => item.id === expenseId)?.[0]) || null
 
-  const deleteExpenseHandler = () => {
+  const deleteExpenseHandler = async () => {
     if (!expenseId) return
 
+    setIsFetching(true)
+    //Firebase
+    await deleteExpense(expenseId)
+    //Local
     removeExpense(expenseId)
+    setIsFetching(false)
     navigation.goBack()
   }
   const cancelExpenseHandler = () => {
     navigation.goBack()
   }
-  const confirmExpenseHandler = (values) => {
+  const confirmExpenseHandler = async (values) => {
+    setIsFetching(true)
     if (hasExpenseId) {
-      updateExpense(expenseId, values)
+      //Firebase update
+      await updateExpense(expenseId, values)
+      //Local update
+      contextUpdateExpense(expenseId, values)
     } else {
+      //Add to firebase
+      const id = await storeExpense(values)
+      //Local
       addExpense({
-        id: Math.floor(Math.random() * 100000) + new Date().toString(),
+        id,
         ...values
       })
     }
+    setIsFetching(false)
     navigation.goBack()
   }
 
@@ -42,6 +63,10 @@ export default function ManageExpenseScreen({ route, navigation }) {
     title: { value: expense?.title || "" } || "",
     amount: { value: expense?.amount || "" } || "",
     date: { value: expense?.date && getFormattedDate(expense?.date) } || ""
+  }
+
+  if (isFetching) {
+    return <LoadingOverlay />
   }
 
   return (
